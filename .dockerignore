@@ -1,0 +1,11 @@
+node_modules
+dist
+coverage
+tests
+.git
+.gitignore
+*.md
+cs-starter-pack
+.env
+.env.*
+*.log

@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Typecheck, tests, official checker
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: pulse
+          POSTGRES_PASSWORD: pulse
+          POSTGRES_DB: pulsegym
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U pulse -d pulsegym"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    env:
+      DATABASE_URL: postgres://pulse:pulse@localhost:5432/pulsegym
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Typecheck (sources and tests)
+        run: npm run typecheck
+
+      - name: Test suite (unit, integration, DB constraints, concurrency)
+        run: npm test
+
+      - name: Compile for production
+        run: npm run build
+
+      - name: Official checker against the running service
+        run: |
+          node dist/index.js > app.log 2>&1 &
+          for _ in $(seq 1 40); do
+            if curl -sf http://localhost:8080/health > /dev/null; then break; fi
+            sleep 1
+          done
+          python3 check.py
+          cat app.log
+
+  docker:
+    name: Docker image builds
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the production image
+        run: docker build -t pulsegym-booking-api:ci .

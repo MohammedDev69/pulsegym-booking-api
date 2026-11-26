@@ -1,0 +1,35 @@
+{
+  "name": "pulsegym-booking-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PulseGym booking backend: capacity-safe bookings, FIFO waitlist, idempotent requests.",
+  "main": "dist/index.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "tsc -p tsconfig.json --watch",
+    "typecheck": "tsc -p tsconfig.test.json",
+    "test": "jest --runInBand",
+    "test:unit": "jest --runInBand tests/unit",
+    "test:integration": "jest --runInBand tests/integration",
+    "test:concurrency": "jest --runInBand tests/concurrency",
+    "stress": "python3 scripts/stress.py",
+    "check": "python3 check.py"
+  },
+  "dependencies": {
+    "express": "5.1.0",
+    "pg": "8.13.1"
+  },
+  "devDependencies": {
+    "@types/express": "5.0.0",
+    "@types/jest": "29.5.14",
+    "@types/node": "22.10.2",
+    "@types/pg": "8.11.10",
+    "jest": "29.7.0",
+    "ts-jest": "29.2.5",
+    "typescript": "5.7.2"
+  }
+}
